@@ -38,7 +38,7 @@ def getDB(jsonpath='/home/rcvbong/jsonsMP',ind=1):
     shell = json.values()
     data = shell[0]
     labels = data[0]
-    # labact = labels['labact']
+    labact = labels['labact']
     labobj = labels['labobj']
     
     first = data[1]
@@ -58,14 +58,24 @@ def getDB(jsonpath='/home/rcvbong/jsonsMP',ind=1):
     # for ind in range(len(listactiv)):
     #     X_train[ind,:] = np.array(listactiv[ind])
     # X_train = np.squeeze(X_train)
-    # print(X_train.shape)
-    X_train = X_train.transpose(0,2,1)
+    ''' squeeze makes (batch_size,4096), but it doesn't work. makes error with no train '''
+    
+    
+    ''' keras document says (nb_samples, timesteps, input_dim) '''
+    ''' 2,0,1 means (1,batch_size,4096 dim) --> train as 1/1 '''
+    X_train = X_train.transpose(2,0,1)
+    ''' 0,2,1 means (batch_size,1,4096 dim) --> train as ?/batch_size '''
+    #X_train = X_train.transpose(0,2,1)
+    
+    
     # print(X_train.shape)
     # Y_train = np.zeros((len(data)-1, 222), dtype="uint8")
-    Y_train = np.zeros((len(data)-1, 155), dtype="uint8")
+    act_label = np.zeros((len(data)-1, 67), dtype="uint8")
+    obj_label = np.zeros((len(data)-1, 155), dtype="uint8")
     
-    # Y_train[:,labact-1] = 1
-    Y_train[:,:] = labobj
+    act_label[:,labact-1] = 1
+    obj_label[:,:] = labobj
+    
     # Y_train[:,67:222] = labobj
     
     # for ind in range(len(listlabact)):
@@ -86,5 +96,5 @@ def getDB(jsonpath='/home/rcvbong/jsonsMP',ind=1):
     #     Y_test[ind,1] = (testlabobj[ind]-1)
         
     # print(Y_train[0])
-    return X_train, Y_train
+    return X_train, act_label, obj_label
 

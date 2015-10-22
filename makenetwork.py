@@ -1,4 +1,4 @@
-from keras.models import Sequential
+from keras.models import Sequential, Graph
 from keras.layers.core import Dense, Dropout, Activation, MaskedLayer, Flatten, RepeatVector
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras.layers.recurrent import LSTM
@@ -31,6 +31,23 @@ class Activations(MaskedLayer):
                 "target": self.target,
                 "beta": self.beta}
 
+def makegraph():
+    model = Graph()
+    model.add_input(name='input1',ndim=3)
+    model.add_node(LSTM(4096,2048, return_sequences=True), name='lstm1', input='input1')
+    model.add_node(Dropout(0.2),name='drop1',input='lstm1')
+    model.add_node(LSTM(2048,512, return_sequences=True), name='lstm2', input='drop1')
+    model.add_node(Dropout(0.2),name='drop2',input='lstm2')
+    model.add_node(LSTM(512,512, return_sequences=False), name='lstm3', input='drop2')
+    model.add_node(Dropout(0.2),name='drop3',input='lstm3')
+    model.add_node(Dense(512,67),name='dense1',input='drop3')
+    model.add_node(Dense(512,155),name='dense2',input='drop3')
+    model.add_node(Activation('softmax'),name='softmax1',input='dense1')
+    model.add_node(Activation('softmax'),name='softmax2',input='dense2')
+    model.add_output(name='actout',input='softmax1')
+    model.add_output(name='objout',input='softmax2')
+
+    return model
 
 def makenetwork():    
     model = Sequential()
@@ -80,24 +97,24 @@ def makenetwork():
     # model.add(RepeatVector(4096))
     # # the GRU below returns sequences of max_caption_len vectors of size 256 (our word embedding size)
     
-    # model.add(LSTM(4096, 2048, return_sequences=True))
-    # model.add(Dropout(0.2))
-    # model.add(LSTM(2048, 512, return_sequences=False))
-    # model.add(Dropout(0.5))
-    # model.add(Dense(512, 67))
-    # model.add(Activation('softmax'))
+    model.add(LSTM(4096, 2048, return_sequences=True))
+    model.add(Dropout(0.2))
+    model.add(LSTM(2048, 512, return_sequences=False))
+    model.add(Dropout(0.5))
+    model.add(Dense(512, 67))
+    model.add(Activation('softmax'))
     
     # model.add(LSTM(4096, 4096, return_sequences=True))
     # model.add(Dropout(0.2))
-    model.add(LSTM(4096, 2048, return_sequences=True))
-    model.add(Dropout(0.2))
-    model.add(LSTM(2048, 1024, return_sequences=True))
-    model.add(Dropout(0.2))
-    model.add(LSTM(1024, 512, return_sequences=True))
-    model.add(Dropout(0.2))
-    model.add(LSTM(512, 512, return_sequences=False))
+    # model.add(LSTM(4096, 2048, return_sequences=True))
     # model.add(Dropout(0.2))
-    model.add(Dense(512, 155))
-    model.add(Activation('softmax'))
+    # model.add(LSTM(2048, 1024, return_sequences=True))
+    # model.add(Dropout(0.2))
+    # model.add(LSTM(1024, 512, return_sequences=True))
+    # model.add(Dropout(0.2))
+    # model.add(LSTM(512, 512, return_sequences=False))
+    # # model.add(Dropout(0.2))
+    # model.add(Dense(512, 67))
+    # model.add(Activation('softmax'))
 
     return model
