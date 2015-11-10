@@ -43,13 +43,23 @@ def getDB(jsonpath='/home/rcvbong/jsonsMP',ind=1):
     
     first = data[1]
     activ = first['activ']
-    X_train = np.zeros((len(data)-1, len(activ),1), dtype="float")
+    npactiv = np.array(activ)
+    npactiv = npactiv.transpose(1,0)
+    dim = npactiv.shape[1]
+    datanum = npactiv.shape[0]
     
-    for i in range(1,len(data)):
-        datum = data[i]
-        X_train[i-1,:] = np.array(datum['activ'])
-        # listactiv.append(datum['activ'])
-        # listfnum.append(datum['fnum'])
+    # pdb.set_trace()
+    
+    X_train = npactiv.reshape(1,datanum,dim)
+    X_train = X_train.astype('float16')
+    # X_train = np.zeros((len(data)-1, len(activ),1), dtype="float16")
+    
+    # for i in range(1,len(data)):
+    #     datum = data[i]
+    #     pdb.set_trace()
+    #     X_train[i-1,:] = np.array(datum['activ'])
+    #     # listactiv.append(datum['activ'])
+    #     # listfnum.append(datum['fnum'])
         
     # pdb.set_trace()
         
@@ -63,15 +73,15 @@ def getDB(jsonpath='/home/rcvbong/jsonsMP',ind=1):
     
     ''' keras document says (nb_samples, timesteps, input_dim) '''
     ''' 2,0,1 means (1,batch_size,4096 dim) --> train as 1/1 '''
-    X_train = X_train.transpose(2,0,1)
+    # X_train = X_train.transpose(2,0,1)
     ''' 0,2,1 means (batch_size,1,4096 dim) --> train as ?/batch_size '''
     #X_train = X_train.transpose(0,2,1)
     
     
     # print(X_train.shape)
     # Y_train = np.zeros((len(data)-1, 222), dtype="uint8")
-    act_label = np.zeros((len(data)-1, 67), dtype="uint8")
-    obj_label = np.zeros((len(data)-1, 155), dtype="uint8")
+    act_label = np.zeros((datanum, 67), dtype="uint8")
+    obj_label = np.zeros((datanum, 155), dtype="uint8")
     
     act_label[:,labact-1] = 1
     obj_label[:,:] = labobj

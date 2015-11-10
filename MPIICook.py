@@ -16,10 +16,16 @@ import os.path
 import glob
 import time
 import sys
-''' THEANO_FLAGS=mode=FAST_RUN,device=gpu,floatX=float32,exception_verbosity=high,optimizer=fast_compile python MPIICook.py '''
+''' THEANO_FLAGS=mode=FAST_RUN,device=gpu,floatX=float32,optimizer=fast_compile python MPIICook.py '''
 
 isGraph = True
 showAP = True
+respath = 'merge2'
+try:
+    os.stat(respath)
+except:    
+    os.mkdir(respath)
+
 
 nb_epoch = 100
 f = open('sets.json','r')
@@ -47,9 +53,6 @@ if isGraph:
     model = makegraph()
 else:
     model = makenetwork()
-
-
-respath = 'merge'
 
 found = glob.glob(respath+'/model*.hdf5')
 mval = -1
@@ -145,6 +148,8 @@ else:
 for iteration in range(mval+1,nb_epoch):
     # datapath='/media/disk1/bgsim/Dataset/UCF-101'
     # trainlist,testlist = makeDB(datapath=datapath,divideself=False)
+    np.random.shuffle(indtrain)
+    print('\nshuffle train index')
     print('\n'+str(iteration)+'th epoch '+'-'*50)
     
     seen = 0
@@ -187,6 +192,7 @@ for iteration in range(mval+1,nb_epoch):
                 predact = reterr['actout']
                 batchobjAP = 0
                 batchactAP = 0
+                batchacc = 0
                 for batidx in range(len(predobj)):    
                     sortedobjerr = [si[0] for si in sorted(enumerate(predobj[batidx]),reverse=True,key=lambda xy:xy[1])]
                     itemobjidx = np.where(obj_label[batidx]==1)
@@ -206,6 +212,9 @@ for iteration in range(mval+1,nb_epoch):
                     actAP = 1./(actpredidx+1)
                     batchactAP = batchactAP + actAP
                     
+                    if actpredidx == 0:
+                        batchacc = batchacc + 1
+                    
                     soridx = []
                     for idx in range(len(itemobjidx)):
                         curidx = sortedobjerr.index(itemobjidx[idx])
@@ -215,7 +224,9 @@ for iteration in range(mval+1,nb_epoch):
                     for idx in range(len(soridx)):
                         objAP = objAP + float(idx+1)/soridx[idx]
                     batchobjAP = batchobjAP + float(objAP)/len(itemobjidx)
-                                        
+                
+                totacc = totacc + batchacc
+                
                 totactAP = totactAP + batchactAP
                 totobjAP = totobjAP + batchobjAP
                 apseen = apseen + len(act_label)
@@ -223,12 +234,16 @@ for iteration in range(mval+1,nb_epoch):
                 curobjAP = float(totobjAP)/apseen
                 batactAP = float(batchactAP)/len(act_label)
                 batobjAP = float(batchobjAP)/len(act_label)
+                
+                curacc = float(totacc)/apseen
+                
                 endap = time.time()
                 info = ''
                 info += ' batchact = %.2f' % batactAP
                 info += ' batchobj = %.2f' % batobjAP
                 info += ' curact = %.2f' % curactAP
                 info += ' curobj = %.2f' % curobjAP
+                info += ' acc = %.2f' % curacc
                 info += ' time = %.2fs' % (endap-start)
                 sys.stdout.write(info)
                 sys.stdout.flush()                
