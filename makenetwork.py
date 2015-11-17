@@ -43,7 +43,7 @@ def makemergeconcatseq2048():
     model.add(Dropout(0.2))
     model.add(LSTM(4096, 2048, return_sequences=False))
     model.add(Dropout(0.2))
-    model.add(Dense(2048, 67))
+    model.add(Dense(2048, 155))
     model.add(Activation('softmax'))
     return model
 
@@ -58,6 +58,51 @@ def makemergeconcat2():
     model.add(Activation('softmax'))
     return model
 
+def makemergesum2048():
+    
+    model = Graph()
+    model.add_input(name='rgb',ndim=3)
+    model.add_input(name='of',ndim=3)
+    model.add_node(LSTM(4096,2048, return_sequences=True),name='rgblstm',input='rgb')
+    model.add_node(Dropout(0.2),name='droprgb',input='rgblstm')
+    model.add_node(LSTM(4096,2048, return_sequences=True),name='oflstm',input='of')
+    model.add_node(Dropout(0.2),name='dropof',input='oflstm')
+    model.add_node(LSTM(2048,2048, return_sequences=False), name='lstmmerge', inputs=['droprgb','dropof'], merge_mode='sum')
+    model.add_node(Dropout(0.2),name='droplstm',input='lstmmerge')
+    model.add_node(Dense(2048,67),name='dense1',input='droplstm')
+    model.add_node(Activation('softmax'),name='softmax1',input='dense1')
+    model.add_output(name='out',input='softmax1')
+    return model
+
+def makeobjvec_actnet():
+    
+    model = Graph()
+    model.add_input(name='objvec',ndim=3)
+    model.add_node(LSTM(2048,2048, return_sequences=True),name='inlstm',input='objvec')
+    model.add_node(Dropout(0.2),name='dropin',input='inlstm')
+    model.add_node(LSTM(2048,2048, return_sequences=False), name='lstmtrain', input='dropin')
+    model.add_node(Dropout(0.2),name='droplstm',input='lstmtrain')
+    model.add_node(Dense(2048,67),name='dense1',input='droplstm')
+    model.add_node(Activation('softmax'),name='softmax1',input='dense1')
+    model.add_output(name='out',input='softmax1')
+    return model
+
+def makemergeconcat2048obj():
+    
+    model = Graph()
+    model.add_input(name='rgb',ndim=3)
+    model.add_input(name='of',ndim=3)
+    model.add_node(LSTM(4096,2048, return_sequences=True),name='rgblstm',input='rgb')
+    model.add_node(Dropout(0.2),name='droprgb',input='rgblstm')
+    model.add_node(LSTM(4096,2048, return_sequences=True),name='oflstm',input='of')
+    model.add_node(Dropout(0.2),name='dropof',input='oflstm')
+    model.add_node(LSTM(4096,2048, return_sequences=False), name='lstmmerge', inputs=['droprgb','dropof'], merge_mode='concat')
+    model.add_node(Dropout(0.2),name='droplstm',input='lstmmerge')
+    model.add_node(Dense(2048,155),name='dense1',input='droplstm')
+    model.add_node(Activation('softmax'),name='softmax1',input='dense1')
+    model.add_output(name='out',input='softmax1')
+    return model
+
 def makemergeconcat2048():
     
     model = Graph()
@@ -69,7 +114,7 @@ def makemergeconcat2048():
     model.add_node(Dropout(0.2),name='dropof',input='oflstm')
     model.add_node(LSTM(4096,2048, return_sequences=False), name='lstmmerge', inputs=['droprgb','dropof'], merge_mode='concat')
     model.add_node(Dropout(0.2),name='droplstm',input='lstmmerge')
-    model.add_node(Dense(2048,67),name='dense1',input='droplstm')
+    model.add_node(Dense(2048,155),name='dense1',input='droplstm')
     model.add_node(Activation('softmax'),name='softmax1',input='dense1')
     model.add_output(name='out',input='softmax1')
     return model
